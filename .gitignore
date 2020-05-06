@@ -1,0 +1,13 @@
+.classpath
+
+.project
+
+.vscode/*
+
+.settings/*
+target/
+
+#packages
+*.jar
+*.war
+
