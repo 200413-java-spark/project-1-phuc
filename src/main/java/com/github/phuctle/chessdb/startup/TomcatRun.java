@@ -9,7 +9,7 @@ import org.apache.catalina.Wrapper;
 import org.apache.catalina.startup.Tomcat;
 
 public class TomcatRun {
-/*
+
     public void runTomcat() throws LifecycleException {
         Tomcat tomcat = new Tomcat();
         tomcat.setBaseDir(new File("target/tomcat/").getAbsolutePath());
@@ -32,5 +32,5 @@ public class TomcatRun {
             }
         });
     }
-    */
+    
 }

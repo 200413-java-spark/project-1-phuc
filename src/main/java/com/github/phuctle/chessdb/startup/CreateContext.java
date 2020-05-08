@@ -5,10 +5,28 @@ import org.apache.spark.api.java.JavaSparkContext;
 
 //creates the spark context
 public class CreateContext {
-    public JavaSparkContext createContext(){
+    private JavaSparkContext context;
+    private static CreateContext instance;
+
+    //creates a singleton
+    private CreateContext(){}
+    public static CreateContext getInstance(){
+        if (instance == null){
+            instance = new CreateContext();
+            instance.createContext();
+        }
+        return instance;
+    }
+
+    private void createContext(){
+        if (this.context == null){
         SparkConf conf = new SparkConf().setAppName("project-1").setMaster("local");
-        JavaSparkContext context = new JavaSparkContext(conf);
-        return context;
+        this.context = new JavaSparkContext(conf);
+            System.out.println("CREATING CONTEXT!!!");
+    }
     }
     
+    public JavaSparkContext getContext(){
+        return this.context;
+    }
 }

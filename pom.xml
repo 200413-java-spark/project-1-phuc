@@ -5,7 +5,7 @@
   <groupId>com.github.phuctle</groupId>
   <artifactId>chessdb</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <packaging>war</packaging>
+  <packaging>jar</packaging>
 
   <name>ChessDBSpark</name>
 
