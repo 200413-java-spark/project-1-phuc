@@ -43,8 +43,8 @@ public class ServletTest extends HttpServlet {
         resp.getWriter().println("This is a get test.");
 
         RDD<Row> blackwins1 = chessDataCSV.rdd();
+        JavaRDD<Row> blackWinsRDD = blackwins1.toJavaRDD();
         
-
     }
     
     @Override
