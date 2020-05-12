@@ -2,10 +2,9 @@ package com.github.phuctle.chessdb.startup;
 
 import java.io.File;
 
-import com.github.phuctle.chessdb.ServletTest;
+import com.github.phuctle.chessdb.SparkServlet;
 
 import org.apache.catalina.LifecycleException;
-import org.apache.catalina.Wrapper;
 import org.apache.catalina.startup.Tomcat;
 
 public class TomcatRun {
@@ -16,8 +15,8 @@ public class TomcatRun {
         tomcat.setPort(8080);
         tomcat.getConnector();
         tomcat.addWebapp("/chessdb",new File("src/main/webapp/").getAbsolutePath());
-        Wrapper testServlet = tomcat.addServlet("/chessdb","ServletTest",new ServletTest());
-        testServlet.addMapping("/test");
+        tomcat.addServlet("/chessdb","SparkServlet",new SparkServlet())
+            .addMapping("/spark");
         tomcat.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {

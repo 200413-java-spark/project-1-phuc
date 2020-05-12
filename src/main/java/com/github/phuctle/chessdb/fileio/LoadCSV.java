@@ -1,21 +1,38 @@
 package com.github.phuctle.chessdb.fileio;
 
+import com.github.phuctle.chessdb.startup.CreateContext;
 import com.github.phuctle.chessdb.startup.CreateSparkSession;
 
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
 public class LoadCSV {
-    public Dataset<Row> getCSVFile(){
-        CreateSparkSession session = CreateSparkSession.getInstance();
-        SparkSession sparkSession = session.getSession();
+    CreateSparkSession session = CreateSparkSession.getInstance();
+    CreateContext context = CreateContext.getInstance();
+
+    public Dataset<Row> getCSVFileSession(String fileName){
+        
+        SparkSession sparkSession = this.session.getSession();
         if (sparkSession == null){
             System.out.println("SPARKSESSION CODE FAILURE!!!");
         }
-        Dataset<Row> chessDataCSV = sparkSession.read().format("csv").option("header", "true").load("src/resources/games.csv");   
+        Dataset<Row> chessDataCSV = sparkSession.read().format("csv")
+            .option("header", "true").load("src/resources/"+fileName);   
 
         return chessDataCSV;
     }
     
+    public JavaRDD<String> getCSVFileContext(String fileName){
+        
+        JavaSparkContext sc = context.getContext();
+        if (sc == null){
+            System.out.println("SPARKCONTEXT CODE FAILURE!!!");
+        }
+        JavaRDD<String> chessStringRDD = sc.textFile("src/resources/"+fileName);
+
+        return chessStringRDD;
+    }
 }

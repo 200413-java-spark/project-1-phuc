@@ -17,11 +17,11 @@ import org.apache.spark.sql.Row;
 public class ChessDB {
     public static void main(String[] args) throws LifecycleException{
 
-        TomcatRun startupServer = new TomcatRun();
+        TomcatRun startupServer = new TomcatRun(); //starts up the Tomcat container
         startupServer.runTomcat();
 
-        CreateContext.getInstance();
-        CreateSparkSession.getInstance(); 
+        CreateContext.getInstance(); //starts Spark
+        //CreateSparkSession.getInstance(); 
 
     }
     
