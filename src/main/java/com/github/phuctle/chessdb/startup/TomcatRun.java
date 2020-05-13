@@ -3,6 +3,7 @@ package com.github.phuctle.chessdb.startup;
 import java.io.File;
 
 import com.github.phuctle.chessdb.SparkServlet;
+import com.github.phuctle.chessdb.SqlServlet;
 
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.Tomcat;
@@ -17,6 +18,8 @@ public class TomcatRun {
         tomcat.addWebapp("/chessdb",new File("src/main/webapp/").getAbsolutePath());
         tomcat.addServlet("/chessdb","SparkServlet",new SparkServlet())
             .addMapping("/spark");
+        tomcat.addServlet("/chessdb","SqlServlet",new SqlServlet())
+            .addMapping("/sql");
         tomcat.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {

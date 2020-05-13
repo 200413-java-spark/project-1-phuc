@@ -1,0 +1,32 @@
+package com.github.phuctle.chessdb.io;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class SqlDataSource {
+
+    private static SqlDataSource instance;
+    private String url;
+    private String user;
+    private String password;
+
+    private SqlDataSource() {
+        //URL needs to be changed accordingly when the IP for the ec2 changes
+        url = System.getProperty("database.url", "jdbc:postgresql://3.17.144.3:5432/chessDB");
+        user = System.getProperty("database.username", "tttdb");
+        password = System.getProperty("database.password", "tttdb");
+    }
+
+    public static SqlDataSource getInstance() {
+        if (instance == null) {
+            instance = new SqlDataSource();
+        }
+        return instance;
+    }
+
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(url, user, password);
+    }
+    
+}

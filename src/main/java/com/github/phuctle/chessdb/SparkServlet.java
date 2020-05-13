@@ -1,16 +1,13 @@
 package com.github.phuctle.chessdb;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.github.phuctle.chessdb.fileio.LoadCSV;
+import com.github.phuctle.chessdb.io.LoadCSV;
 import com.github.phuctle.chessdb.startup.CreateContext;
 
 import org.apache.spark.SparkConf;
@@ -27,28 +24,13 @@ import scala.Tuple2;
 
 public class SparkServlet extends HttpServlet {
     /**
-     *
+     *Servlet used to interact with Spark
      */
     private static final long serialVersionUID = 1L;
-    //List<String> testList = new ArrayList<>();
-    //JavaSparkContext sparkContext;
-    //Dataset<Row> chessDataCSV;
-/*
-    @Override
-    public void init() throws ServletException {
-        SparkConf conf = new SparkConf()
-        .setAppName("ChessTable")
-        .setMaster("local");
-        sparkContext = new JavaSparkContext(conf);
-        // create session to load csv
-        SparkSession sparkSession = SparkSession.builder().master("local").appName("Spark Test").getOrCreate();
-        // reads in csv
-        chessDataCSV = sparkSession.read().format("csv").option("header", "true").load("games.csv");
-    }
-*/
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        System.out.println("GET TEST");
+        System.out.println("GET METHOD CALL");
         String fileName = req.getParameter("file");
         if (fileName != null) {
             resp.getWriter().println("These are the names of the columns: \n");
@@ -70,20 +52,11 @@ public class SparkServlet extends HttpServlet {
         else{
             resp.getWriter().println("This needs a file parameter.");
         }
-
-        //String headerTag = header[0];
-        //JavaRDD<String[]> chessDataCol = chessDataColumnsPre.filter((x) -> (!(x[0].equals(headerTag))));
-
-        /*
-        for (String[] line:chessDataCol.take(20)){
-            resp.getWriter().println("* "+line[0]);}
-            */
-
     }
     
     @Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        System.out.println("POST TEST");
+        System.out.println("POST METHOD CALL");
         //Dataset<Row> chessDataCSV = new LoadCSV().getCSVFileSession();
         //chessDataCSV.show();
         String col1s = req.getParameter("col1");
@@ -91,6 +64,7 @@ public class SparkServlet extends HttpServlet {
         String col3s = req.getParameter("col3");
         String op = req.getParameter("op");
         String fileName = req.getParameter("file");
+        String save = req.getParameter("save");
 
         try {
             if (col1s != null){
@@ -138,7 +112,7 @@ public class SparkServlet extends HttpServlet {
 
                         JavaPairRDD<String, Tuple2<Integer, Integer>> joinedRDD = totalValuePair.join(selectedColCount);
                         JavaPairRDD<String, Integer> joinedAveRDD = joinedRDD.mapToPair((x) -> new Tuple2(x._1,(x._2._1 / x._2._2)));
-                        resp.getWriter().println(joinedAveRDD.collect());
+                        //resp.getWriter().println(joinedAveRDD.collect());
                         break;
                 
                     default:
@@ -151,13 +125,13 @@ public class SparkServlet extends HttpServlet {
                         JavaPairRDD<String, Integer> selectedColCount = selectedCol1
                             .mapToPair(x -> new Tuple2(x,1))
                             .reduceByKey((a,b) -> ((int)a+(int)b));
-                        resp.getWriter().println(selectedColCount.collect());
+                        //resp.getWriter().println(selectedColCount.collect());
                         break;
                     case "ave":
                         JavaRDD<Integer> colInt = selectedCol1
                             .map(x -> Integer.parseInt(x));
                         int average = (int) (colInt.reduce((a, b) -> ((int) a + (int) b)) / colInt.count());
-                        resp.getWriter().println("The average of column "+col1s+" is "+average);
+                        //resp.getWriter().println("The average of column "+col1s+" is "+average);
                         break;
                     default:
                         break;

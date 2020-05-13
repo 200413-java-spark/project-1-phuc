@@ -1,4 +1,4 @@
-package com.github.phuctle.chessdb.fileio;
+package com.github.phuctle.chessdb.io;
 
 import com.github.phuctle.chessdb.startup.CreateContext;
 import com.github.phuctle.chessdb.startup.CreateSparkSession;
