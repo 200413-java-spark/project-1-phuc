@@ -13,9 +13,9 @@ public class SqlDataSource {
 
     private SqlDataSource() {
         //URL needs to be changed accordingly when the IP for the ec2 changes
-        url = System.getProperty("database.url", "jdbc:postgresql://3.17.144.3:5432/chessDB");
-        user = System.getProperty("database.username", "tttdb");
-        password = System.getProperty("database.password", "tttdb");
+        url = System.getProperty("database.url", "jdbc:postgresql://3.17.144.3:5432/chessdb");
+        user = System.getProperty("database.username", "chessdb");
+        password = System.getProperty("database.password", "chessdb");
     }
 
     public static SqlDataSource getInstance() {
