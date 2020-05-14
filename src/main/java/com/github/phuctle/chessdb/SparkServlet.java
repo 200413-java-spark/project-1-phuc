@@ -87,7 +87,8 @@ public class SparkServlet extends HttpServlet {
             System.exit(0);
         }
 
-        
+        String tableCreate = "new";
+
         if (col1s != null && op != null){
             //load in file as an RDD
             JavaRDD<String> chessDataCSV = new LoadCSV().getCSVFileContext(fileName);
@@ -160,7 +161,7 @@ public class SparkServlet extends HttpServlet {
                                     //resp.getWriter().println("Attempting to push to database.");
                                     SqlDataSource dataSource = SqlDataSource.getInstance();
 				                    Dao<String[]> fileInRepo = new SqlRepo(dataSource);
-                                    fileInRepo.insertAll(pushArray);
+                                    fileInRepo.insertAll(pushArray, tableCreate);
                                 }
                             }
                         }

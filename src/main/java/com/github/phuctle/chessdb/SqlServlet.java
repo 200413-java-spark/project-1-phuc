@@ -38,12 +38,14 @@ public class SqlServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         System.out.println("GET SQL CALL");
 
+        String tableSelect = "req";
+
                 SqlDataSource dataSource = SqlDataSource.getInstance();
                 Dao<String[]> sqlDBget = new SqlRepo(dataSource);
 
             // Read all from database
                     List<String[]> outData = new ArrayList<>();
-                    outData = sqlDBget.readAll();
+                    outData = sqlDBget.readAll(tableSelect);
                     for (int i = 0; i< outData.size();i++) {
                         resp.getWriter().format("%20s", outData.get(i)[0] + " ");
                         resp.getWriter().format("%20s", outData.get(i)[1] + "\n");
