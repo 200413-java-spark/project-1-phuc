@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface Dao<E> {
 
-    void insertAll(List<E> e);
+    void insertAll(List<E> e, String x);
 
-    List<E> readAll();
+    List<E> readAll(String x);
 }
