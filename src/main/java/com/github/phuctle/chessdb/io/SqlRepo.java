@@ -18,7 +18,7 @@ public class SqlRepo implements Dao<String[]> {
     }
 
     @Override
-    public void insertAll(List<String[]> dataVars, String createTable) {
+    public void insertAll(List<String[]> dataVars) {
         String sql = "insert into singlecol(col1, col2) values(?,?)";
         try(Connection connection = this.dataSource.getConnection();
             PreparedStatement statement = connection.prepareStatement(sql);){
@@ -36,9 +36,9 @@ public class SqlRepo implements Dao<String[]> {
     }
 
     @Override
-    public List<String[]> readAll(String readFromTable) {
+    public List<String[]> readAll(String tableSelect) {
         if (cache.isEmpty()){
-            String sql = "select * from singlecol";
+            String sql = "select * from "+ tableSelect;
 
             try (Connection connection = this.dataSource.getConnection();
                     Statement statement = connection.createStatement();

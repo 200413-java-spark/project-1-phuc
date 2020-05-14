@@ -49,4 +49,6 @@ col2
 	-
 
 ### tag: chessdb/sql
-> curl GET localhost:8080/chessdb/sql
+> curl -X GET localhost:8080/chessdb/sql
+
+> curl -X POST localhost:8080/chessdb/sql

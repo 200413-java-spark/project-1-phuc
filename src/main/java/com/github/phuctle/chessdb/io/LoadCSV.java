@@ -10,9 +10,9 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
 public class LoadCSV {
-    CreateSparkSession session = CreateSparkSession.getInstance();
+    //CreateSparkSession session = CreateSparkSession.getInstance();
     CreateContext context = CreateContext.getInstance();
-
+    /*
     public Dataset<Row> getCSVFileSession(String fileName){
         
         SparkSession sparkSession = this.session.getSession();
@@ -23,7 +23,7 @@ public class LoadCSV {
             .option("header", "true").load("src/resources/"+fileName);   
 
         return chessDataCSV;
-    }
+    }*/
     
     public JavaRDD<String> getCSVFileContext(String fileName){
         
