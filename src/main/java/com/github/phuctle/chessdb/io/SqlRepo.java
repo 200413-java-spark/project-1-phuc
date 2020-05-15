@@ -42,17 +42,19 @@ public class SqlRepo implements Dao<String[]> {
     }
 
     @Override
-    public List<String[]> readAll(String tableSelect) {
+    public List<String[]> readAll(StorageVar tableSelect) {
         if (cache.isEmpty()){
-            String sql = "select * from "+ tableSelect;
+            String sql = "select * from " + tableSelect.getTableName();
+            String col1 = tableSelect.getCol1Name();
+            String col2 = tableSelect.getCol2Name();
 
             try (Connection connection = this.dataSource.getConnection();
                     Statement statement = connection.createStatement();
                     ResultSet resultSet = statement.executeQuery(sql);){
                 
                 while(resultSet.next()){
-                    String col1s = resultSet.getString("col1");
-                    String col2s = resultSet.getString("col2");
+                    String col1s = resultSet.getString(col1);
+                    String col2s = resultSet.getString(col2);
                     String[] outResult = new String[2];
                     outResult[0] = col1s;
                     outResult[1] = col2s;

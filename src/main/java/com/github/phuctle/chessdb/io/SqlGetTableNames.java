@@ -40,7 +40,7 @@ public class SqlGetTableNames implements Dao<String[]> {
     }
 
     @Override
-    public List<String[]> readAll(String tableNames) {
+    public List<String[]> readAll(StorageVar tableNames) {
         if (cache.isEmpty()){
             String sql = "select * from tablenames";
 

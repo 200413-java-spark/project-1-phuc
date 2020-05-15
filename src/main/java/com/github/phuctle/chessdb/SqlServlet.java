@@ -6,6 +6,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -31,65 +33,70 @@ public class SqlServlet extends HttpServlet {
 
         String tableSelect = req.getParameter("table");
 
+        SqlDataSource dataSource = SqlDataSource.getInstance();
+        Dao<String[]> sqlDBget = new SqlRepo(dataSource);
+        Dao<String[]> sqlDBgetNames = new SqlGetTableNames(dataSource);
+        List<String[]> outDataNames = new ArrayList<>();
+        List<String[]> outDataTable = new ArrayList<>();
         if (tableSelect != null){
-            SqlDataSource dataSource = SqlDataSource.getInstance();
-            Dao<String[]> sqlDBget = new SqlRepo(dataSource);
+            outDataNames = sqlDBgetNames.readAll(null);
+            if (outDataNames != null){
+                for(int i =0; i < outDataNames.size(); i++){
+                    if (outDataNames.get(i)[0].equals(tableSelect)){
 
-        // Read all from database
-                List<String[]> outData = new ArrayList<>();
-                outData = sqlDBget.readAll(tableSelect);
-                for (int i = 0; i< outData.size();i++) {
-                    resp.getWriter().format("%20s", outData.get(i)[0] + " ");
-                    resp.getWriter().format("%20s", outData.get(i)[1] + "\n");
+                        resp.getWriter().println(outDataNames.get(i)[0]);
+
+                        StorageVar tableSelectVar = new StorageVar(outDataNames.get(i)[0],outDataNames.get(i)[1],outDataNames.get(i)[2]);
+
+                        resp.getWriter().println(tableSelectVar.getTableName());
+
+                        outDataTable = sqlDBget.readAll(tableSelectVar);
+                        // Read all from database
+                        for (int j = 0; j< outDataTable.size();j++) {
+                            resp.getWriter().format("%20s", outDataTable.get(j)[0] + " ");
+                            resp.getWriter().format("%20s", outDataTable.get(j)[1] + "\n");}
+                    }
                 }
+            }
+
         }
         else{
             resp.getWriter().println("No table name specified.");
-
-            SqlDataSource dataSource = SqlDataSource.getInstance();
-            Dao<String[]> sqlDBgetNames = new SqlGetTableNames(dataSource);
-
             //Reads all names database
-            List<String[]> outData = new ArrayList<>();
-            outData = sqlDBgetNames.readAll(null);
-                if (outData != null){
-                    for (int i = 0; i< outData.size();i++) {
-                        resp.getWriter().format("%20s", outData.get(i)[0] + " ");
-                        resp.getWriter().format("%20s", outData.get(i)[1] + " ");
-                        resp.getWriter().format("%20s", outData.get(i)[2] + "\n");
+            outDataNames = sqlDBgetNames.readAll(null);
+                if (outDataNames.get(0)[0] != null){
+                    resp.getWriter().println("This is a list of table names.\n");
+                    for (int i = 0; i< outDataNames.size();i++) {
+                        resp.getWriter().println(outDataNames.get(i)[0]);
+                        //resp.getWriter().format("%20s", outData.get(i)[1] + " ");
+                        //resp.getWriter().format("%20s", outData.get(i)[2] + "\n");
                     }
                 }
         }
     }
     
+    private StorageVar StorageVar(String tableSelect, String string, String string2) {
+        return null;
+    }
+
     @Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         System.out.println("POST SQL CALL");  
 
-        SqlDataSource dataSource = SqlDataSource.getInstance();
-            Dao<String[]> sqlDBgetNames = new SqlGetTableNames(dataSource);
-
-        // Read all from database
-                List<String[]> outData = new ArrayList<>();
-                outData = sqlDBgetNames.readAll(null);
-                if (outData != null){
-                    for (int i = 0; i< outData.size();i++) {
-                        resp.getWriter().format("%20s", outData.get(i)[0] + " ");
-                        resp.getWriter().format("%20s", outData.get(i)[1] + " ");
-                        resp.getWriter().format("%20s", outData.get(i)[2] + "\n");
-                    }
-                }
-        ArrayList<String[]> uselessTestDummy = new ArrayList<>();
-
-        StorageVar test1 = new StorageVar("table1.csv", "header1" , "op1", uselessTestDummy);
-        StorageVar test2 = new StorageVar("table2.csv", "header1dash2", "header2dash2", "op2", uselessTestDummy);
+        String tableSelect = req.getParameter("table");
         
+        SqlDataSource dataSource = SqlDataSource.getInstance();
 
-        SqlTableCreate newTables = new SqlTableCreate();
-            newTables.makeTable(test1,dataSource);
-            sqlDBgetNames.insertAll(test1);
-            newTables.makeTable(test2, dataSource);
-            sqlDBgetNames.insertAll(test2);
+        String sqlString = "DELETE FROM tablenames " +
+                           "WHERE tablenames=\'" + tableSelect + "\';";
+        String sqlString2 = "DROP TABLE " + tableSelect + ";";
+
+        try(Connection connection = dataSource.getConnection();
+            Statement statement = connection.createStatement();) {
+            statement.executeUpdate(sqlString);
+            statement.executeUpdate(sqlString2);}
+        catch (SQLException e) {
+            System.err.println(e.getMessage());}
 
     }
 }

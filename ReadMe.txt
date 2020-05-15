@@ -30,6 +30,12 @@ op
 -ave
 	-takes the mean of values in selected column
 	-available for single and double column mode
+-top
+	-sorts by key for the top 20 of a column
+	-available for double column mode only
+-topave
+	-sorts for the top 20 of column 1 based on column 2
+	-available for double column mode only
 ```
 save
 ```
@@ -46,9 +52,17 @@ col2
 ```
 -[integer]
 	-selects the second column
-	-
 
 ### tag: chessdb/sql
 > curl -X GET localhost:8080/chessdb/sql
-
+```
+table
+```
+-[name of table]
+	-pulls table from the sql database
 > curl -X POST localhost:8080/chessdb/sql
+```
+table
+```
+-[name of table]
+	-deletes the table

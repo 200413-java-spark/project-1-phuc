@@ -8,5 +8,5 @@ public interface Dao<E> {
 
     void insertAll(StorageVar e);
 
-    List<E> readAll(String e);
+    List<E> readAll(StorageVar e);
 }

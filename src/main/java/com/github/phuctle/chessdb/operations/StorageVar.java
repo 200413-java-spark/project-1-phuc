@@ -13,13 +13,18 @@ public class StorageVar {
     private String col1Name;
     private String col2Name;
 
+    public StorageVar(String tName, String c1Name, String c2Name){
+        this.tableName = tName;
+        this.col1Name = c1Name;
+        this.col2Name = c2Name;
+    }
+
     public StorageVar(String nameF, String hName1, String oName, ArrayList<String[]> cVals){
         this.nameOfFile =  nameF.split(Pattern.quote("."))[0];
         this.headerName1 = hName1;
         this.operationName = oName;
         this.cacheVals = cVals;
 
-        
         createSqlStmt();
     }
 

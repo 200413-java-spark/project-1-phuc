@@ -2,7 +2,9 @@ package com.github.phuctle.chessdb;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -12,7 +14,10 @@ import javax.servlet.http.HttpServletResponse;
 import com.github.phuctle.chessdb.io.Dao;
 import com.github.phuctle.chessdb.io.LoadCSV;
 import com.github.phuctle.chessdb.io.SqlDataSource;
+import com.github.phuctle.chessdb.io.SqlGetTableNames;
 import com.github.phuctle.chessdb.io.SqlRepo;
+import com.github.phuctle.chessdb.operations.SqlTableCreate;
+import com.github.phuctle.chessdb.operations.StorageVar;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -63,6 +68,8 @@ public class SparkServlet extends HttpServlet {
         String fileName = req.getParameter("file");
         String save = req.getParameter("save");
 
+        Set<String> tabNames = new HashSet<>();
+
         // checks to make sure that the col values are integers
         try {
             if (col1s != null) {
@@ -78,8 +85,7 @@ public class SparkServlet extends HttpServlet {
             System.err.println("Column values need to be integers.");
             System.exit(0);
         }
-
-        String tableCreate = "new";
+        
 
         if (col1s != null && op != null) {
             // load in file as an RDD
@@ -89,9 +95,10 @@ public class SparkServlet extends HttpServlet {
             // identifies the first row as the header
             String[] header = chessDataColumnsPre.take(1).get(0);
             if (Integer.parseInt(col1s) < 0 || Integer.parseInt(col1s) > header.length) {
-                System.err.println("The value for column 1 is out of bounds.");
-                System.exit(0);
+                System.err.println("The value for column 1 is out of bounds.");   
             }
+
+            else{//only runs this code if applicable
             String headerTag = header[0];
             // removes the header from the RDD
             JavaRDD<String[]> chessDataCol = chessDataColumnsPre.filter((x) -> (!(x[0].equals(headerTag))));
@@ -117,8 +124,37 @@ public class SparkServlet extends HttpServlet {
                         JavaPairRDD<String, Integer> joinedAveRDD = joinedRDD
                                 .mapToPair((x) -> new Tuple2(x._1, (x._2._1 / x._2._2)));
 
-                        // resp.getWriter().println(joinedAveRDD.collect());
+                        if (save != null && save.equals("yes")) {
+                        List<Tuple2<String, Integer>> twoColAve= joinedAveRDD.collect();
+                        ArrayList<String[]> pushArray = new ArrayList<>();
+
+                        for (int i = 0; i< twoColAve.size(); i++){
+                            String[] topAveKV = {twoColAve.get(i)._1,Integer.toString(twoColAve.get(i)._2)};
+                            pushArray.add(topAveKV);}
+
+                        SqlDataSource dataSource = SqlDataSource.getInstance();
+                        Dao<String[]> fileInRepo = new SqlRepo(dataSource);
+
+                        Dao<String[]> sqlDBgetNames = new SqlGetTableNames(dataSource);
+                        List<String[]> outDataNames = sqlDBgetNames.readAll(null);
+                        if (outDataNames != null){
+                            for (int i = 0; i< outDataNames.size();i++) {
+                                tabNames.add(outDataNames.get(i)[0]);
+                            }
+                        StorageVar sqlData = new StorageVar(fileName, header[Integer.parseInt(col1s)], header[Integer.parseInt(col2s)], op, pushArray);
+                            if (!tabNames.contains(sqlData.getTableName())){
+                                SqlTableCreate tableNew = new SqlTableCreate();
+                                tableNew.makeTable(sqlData, dataSource);
+                                sqlDBgetNames.insertAll(sqlData);
+                                fileInRepo.insertAll(sqlData);
+                            }
+                        }
+                    }
+                        else{
+                            resp.getWriter().println(joinedAveRDD.collect());
+                        }
                         break;
+
                     case "topave":
                         // isolates the two selected columns
                         JavaPairRDD<String, Integer> selectedPairTop = chessDataCol
@@ -134,78 +170,155 @@ public class SparkServlet extends HttpServlet {
                                 .sortByKey(false)
                                 .mapToPair(x -> ((Tuple2) x).swap())
                                 .take(20);
+                        if (save != null && save.equals("yes")) {
 
-                                for (int i =0; i< joinedAveListTop.size(); i ++){
-                                    resp.getWriter().format("%50s",joinedAveListTop.get(i)._1 + " ");
-                                    resp.getWriter().format("%30s",Integer.toString(joinedAveListTop.get(i)._2) + "\n");
-                                }
+                        ArrayList<String[]> pushArray2 = new ArrayList<>();
+                        for (int i = 0; i< joinedAveListTop.size(); i++){
+                            String[] topAveKV = {joinedAveListTop.get(i)._1,Integer.toString(joinedAveListTop.get(i)._2)};
+                            pushArray2.add(topAveKV);
+                        }
+                        SqlDataSource dataSource = SqlDataSource.getInstance();
+                        Dao<String[]> fileInRepo = new SqlRepo(dataSource);
+
+                        Dao<String[]> sqlDBgetNames = new SqlGetTableNames(dataSource);
+                        List<String[]> outDataNames = sqlDBgetNames.readAll(null);
+                        if (outDataNames != null){
+                            for (int i = 0; i< outDataNames.size();i++) {
+                                tabNames.add(outDataNames.get(i)[0]);
+                            }
+                        StorageVar sqlData = new StorageVar(fileName, header[Integer.parseInt(col1s)], header[Integer.parseInt(col2s)], op, pushArray2);
+                            if (!tabNames.contains(sqlData.getTableName())){
+                                SqlTableCreate tableNew = new SqlTableCreate();
+                                tableNew.makeTable(sqlData, dataSource);
+                                sqlDBgetNames.insertAll(sqlData);
+                                fileInRepo.insertAll(sqlData);
+                            }
+                        }
+                        }
+                        else{
+                            for (int i =0; i< joinedAveListTop.size(); i ++){
+                                resp.getWriter().format("%40s",joinedAveListTop.get(i)._1 + " ");
+                                resp.getWriter().format("%20s",Integer.toString(joinedAveListTop.get(i)._2) + "\n");
+                        }
+                    }
                         break;
                     default:
                         break;
-                }
-            } else {
+                } } 
+                else {
                 switch (op) {
                     case "count":
-                        int numOfDiffKeys = selectedColCount.collect().size();
-
+                        
+                        List<Tuple2<String, Integer>> singleCounter = selectedColCount.collect();
                         // saves to database
                         if (save != null && save.equals("yes")) {
-                            // adds a header to the cache to be pushed
+                            
                             ArrayList<String[]> pushArray = new ArrayList<>();
-                            // String[] headerTags = {header[Integer.parseInt(col1s)],"count"};
-                            // pushArray.add(headerTags);
-
-                            resp.getWriter().println("Saving to database.");
-                            // for loop iterates through each set of counted items
-                            for (int i = 0; i < numOfDiffKeys; i++) {
-                                String keyName = selectedColCount.collect().get(i)._1;
-                                String countVal = Integer.toString(selectedColCount.collect().get(i)._2);
-                                // saves the name inside column with its count as a string array
-                                String[] keyValPair = { keyName, countVal };
-
-                                // adds to the arraylist
-                                pushArray.add(keyValPair);
-                                // once done iterating through the list, it pushes to sql repository
-                                if (i == (numOfDiffKeys - 1)) {
-                                    // resp.getWriter().println("Attempting to push to database.");
+                            for (int i = 0; i< singleCounter.size(); i++){
+                                String[] col1Count = {singleCounter.get(i)._1, Integer.toString(singleCounter.get(i)._2)};
+                                pushArray.add(col1Count);
+                            }
                                     SqlDataSource dataSource = SqlDataSource.getInstance();
                                     Dao<String[]> fileInRepo = new SqlRepo(dataSource);
-                                    // fileInRepo.insertAll(pushArray);
+                                    Dao<String[]> sqlDBgetNames = new SqlGetTableNames(dataSource);
+                                    List<String[]> outDataNames = sqlDBgetNames.readAll(null);
+
+                                    if (outDataNames != null){
+                                        for (int j = 0; j< outDataNames.size();j++) {
+                                            tabNames.add(outDataNames.get(j)[0]);
+                                        }
+                                    StorageVar sqlData = new StorageVar(fileName, header[Integer.parseInt(col1s)], op, pushArray);
+                                        if (!tabNames.contains(sqlData.getTableName())){
+                                            SqlTableCreate tableNew = new SqlTableCreate();
+                                            tableNew.makeTable(sqlData, dataSource);
+                                            sqlDBgetNames.insertAll(sqlData);
+                                            fileInRepo.insertAll(sqlData);
+                                        }
+                                    }
+
                                 }
-                            }
-                        } else {
+                            
+                        else {
                             resp.getWriter().println(selectedColCount.collect());
                         }
                         break;
-
+                    
                     case "ave":
                         JavaRDD<Integer> colInt = selectedCol1.map(x -> Integer.parseInt(x));
                         int average = (int) (colInt.reduce((a, b) -> ((int) a + (int) b)) / colInt.count());
 
-                        // resp.getWriter().println("The average of column "+col1s+" is "+average);
-
                         if (save != null && save.equals("yes")) {
+                            ArrayList<String[]> pushArray = new ArrayList<>();
+                            
+                                String[] avePush = {"Ave",Integer.toString(average)};
+                                pushArray.add(avePush);
+                            
+                                SqlDataSource dataSource = SqlDataSource.getInstance();
+                                Dao<String[]> fileInRepo = new SqlRepo(dataSource);
+                                Dao<String[]> sqlDBgetNames = new SqlGetTableNames(dataSource);
+                                List<String[]> outDataNames = sqlDBgetNames.readAll(null);
 
+                                if (outDataNames != null){
+                                    for (int j = 0; j< outDataNames.size();j++) {
+                                        tabNames.add(outDataNames.get(j)[0]);
+                                    }
+                                StorageVar sqlData = new StorageVar(fileName, header[Integer.parseInt(col1s)], op, pushArray);
+                                    if (!tabNames.contains(sqlData.getTableName())){
+                                        SqlTableCreate tableNew = new SqlTableCreate();
+                                        tableNew.makeTable(sqlData, dataSource);
+                                        sqlDBgetNames.insertAll(sqlData);
+                                        fileInRepo.insertAll(sqlData);
+                                    }
+                                }
+                        }
+                        else{
+                            resp.getWriter().println("The average of column "+col1s+" is "+average);
                         }
                         break;
 
                     case "top":
+
                         List<Tuple2<String, Integer>> sortedCol = selectedColCount
                                 .mapToPair(x -> x.swap()) //swaps key and value
                                 .sortByKey(false)         //sorts by key in descending order so highest value
                                 .mapToPair(x -> x.swap()) //is on top
                                 .take(20);                //takes the top 20 values to improve performance
 
-                        /*for (int i =0; i< sortedCol.size(); i ++){
-                            resp.getWriter().format("%50s",sortedCol.get(i)._1 + " ");
-                            resp.getWriter().format("%30s",Integer.toString(sortedCol.get(i)._2) + "\n");
-                        }*/
-                        
+                        if (save != null && save.equals("yes")){
+                            ArrayList<String[]> pushArray = new ArrayList<>();
+                            for (int i = 0; i< sortedCol.size(); i++){
+                                String[] topAveKV = {sortedCol.get(i)._1,Integer.toString(sortedCol.get(i)._2)};
+                                pushArray.add(topAveKV);
+                            }
+                            SqlDataSource dataSource = SqlDataSource.getInstance();
+                            Dao<String[]> fileInRepo = new SqlRepo(dataSource);
+                            Dao<String[]> sqlDBgetNames = new SqlGetTableNames(dataSource);
+                            List<String[]> outDataNames = sqlDBgetNames.readAll(null);
 
+                            if (outDataNames != null){
+                                for (int j = 0; j< outDataNames.size();j++) {
+                                    tabNames.add(outDataNames.get(j)[0]);
+                                }
+                            StorageVar sqlData = new StorageVar(fileName, header[Integer.parseInt(col1s)], op, pushArray);
+                                if (!tabNames.contains(sqlData.getTableName())){
+                                    SqlTableCreate tableNew = new SqlTableCreate();
+                                    tableNew.makeTable(sqlData, dataSource);
+                                    sqlDBgetNames.insertAll(sqlData);
+                                    fileInRepo.insertAll(sqlData);
+                                }
+                            }
+                        }
+                        else{
+                            for (int i =0; i< sortedCol.size(); i ++){
+                                resp.getWriter().format("%40s",sortedCol.get(i)._1 + " ");
+                                resp.getWriter().format("%20s",Integer.toString(sortedCol.get(i)._2) + "\n");
+                        }
+                    }
                     default:
                         break;
                 }
-            }  
+            }
         }
     }
 }
+} 
