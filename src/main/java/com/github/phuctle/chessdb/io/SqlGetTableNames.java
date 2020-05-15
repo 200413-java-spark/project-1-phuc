@@ -1,11 +1,14 @@
 package com.github.phuctle.chessdb.io;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.github.phuctle.chessdb.operations.StorageVar;
 
 public class SqlGetTableNames implements Dao<String[]> {
     private SqlDataSource dataSource;
@@ -18,8 +21,21 @@ public class SqlGetTableNames implements Dao<String[]> {
 
 
     @Override
-    public void insertAll(List<String[]> e) {
-        // TODO Auto-generated method stub
+    public void insertAll(StorageVar dataVars) {
+        String sql = "insert into tablenames(tablenames, col1names, col2names) values(?,?,?)";
+        try(Connection connection = this.dataSource.getConnection();
+            PreparedStatement statement = connection.prepareStatement(sql);){
+        //for (int i =0; i< dataVars.size();i++){
+                statement.setString(1, dataVars.getTableName());
+                statement.setString(2, dataVars.getCol1Name());
+                statement.setString(3, dataVars.getCol2Name());
+                statement.addBatch();
+                statement.executeBatch();
+            }
+        //}
+        catch (SQLException e) {
+            System.err.println(e.getMessage());
+            }
 
     }
 
@@ -39,7 +55,7 @@ public class SqlGetTableNames implements Dao<String[]> {
                     String[] outResult = new String[3];
                     outResult[0] = tNames;
                     outResult[1] = col1Names;
-                    outResult[3] = col2Names;
+                    outResult[2] = col2Names;
                     cache.add(outResult);
                 }
             } catch(SQLException e){

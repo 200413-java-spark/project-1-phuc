@@ -1,6 +1,7 @@
 package com.github.phuctle.chessdb.operations;
 
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 public class StorageVar {
     private String nameOfFile;
@@ -12,8 +13,8 @@ public class StorageVar {
     private String col1Name;
     private String col2Name;
 
-    StorageVar(String nameF, String hName1, String oName, ArrayList<String[]> cVals){
-        this.nameOfFile =  nameF.split(".")[0];
+    public StorageVar(String nameF, String hName1, String oName, ArrayList<String[]> cVals){
+        this.nameOfFile =  nameF.split(Pattern.quote("."))[0];
         this.headerName1 = hName1;
         this.operationName = oName;
         this.cacheVals = cVals;
@@ -22,8 +23,8 @@ public class StorageVar {
         createSqlStmt();
     }
 
-    StorageVar(String nameF, String hName1, String hName2, String oName, ArrayList<String[]> cVals){
-        this.nameOfFile = nameF.split(".")[0];
+    public StorageVar(String nameF, String hName1, String hName2, String oName, ArrayList<String[]> cVals){
+        this.nameOfFile = nameF.split(Pattern.quote("."))[0];
         this.headerName1 = hName1;
         this.headerName2 = hName2;
         this.operationName = oName;

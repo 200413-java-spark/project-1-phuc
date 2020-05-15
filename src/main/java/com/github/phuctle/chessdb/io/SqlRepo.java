@@ -8,6 +8,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.phuctle.chessdb.operations.StorageVar;
+
 public class SqlRepo implements Dao<String[]> {
     private SqlDataSource dataSource;
     private List<String[]> cache;
@@ -18,13 +20,17 @@ public class SqlRepo implements Dao<String[]> {
     }
 
     @Override
-    public void insertAll(List<String[]> dataVars) {
-        String sql = "insert into singlecol(col1, col2) values(?,?)";
+    public void insertAll(StorageVar dataVars) {
+        String tName = dataVars.getTableName();
+        String c1Name = dataVars.getCol1Name();
+        String c2Name = dataVars.getCol2Name();
+
+        String sql = "insert into "+tName+"("+c1Name+", "+c2Name+") values(?,?)";
         try(Connection connection = this.dataSource.getConnection();
             PreparedStatement statement = connection.prepareStatement(sql);){
-        for (int i =0; i< dataVars.size();i++){
-                statement.setString(1, dataVars.get(i)[0]);
-                statement.setString(2, dataVars.get(i)[1]);
+        for (int i =0; i< dataVars.getCache().size();i++){
+                statement.setString(1, dataVars.getCache().get(i)[0]);
+                statement.setString(2, dataVars.getCache().get(i)[1]);
                 statement.addBatch();
             }
             statement.executeBatch();

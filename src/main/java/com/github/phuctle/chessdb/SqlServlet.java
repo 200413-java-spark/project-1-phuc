@@ -14,7 +14,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.github.phuctle.chessdb.io.Dao;
 import com.github.phuctle.chessdb.io.SqlDataSource;
+import com.github.phuctle.chessdb.io.SqlGetTableNames;
 import com.github.phuctle.chessdb.io.SqlRepo;
+import com.github.phuctle.chessdb.operations.SqlTableCreate;
+import com.github.phuctle.chessdb.operations.StorageVar;
 
 public class SqlServlet extends HttpServlet {
     /**
@@ -41,9 +44,22 @@ public class SqlServlet extends HttpServlet {
                 }
         }
         else{
-            resp.getWriter().println("No table name specified");
-        }
+            resp.getWriter().println("No table name specified.");
 
+            SqlDataSource dataSource = SqlDataSource.getInstance();
+            Dao<String[]> sqlDBgetNames = new SqlGetTableNames(dataSource);
+
+            //Reads all names database
+            List<String[]> outData = new ArrayList<>();
+            outData = sqlDBgetNames.readAll(null);
+                if (outData != null){
+                    for (int i = 0; i< outData.size();i++) {
+                        resp.getWriter().format("%20s", outData.get(i)[0] + " ");
+                        resp.getWriter().format("%20s", outData.get(i)[1] + " ");
+                        resp.getWriter().format("%20s", outData.get(i)[2] + "\n");
+                    }
+                }
+        }
     }
     
     @Override
@@ -51,22 +67,29 @@ public class SqlServlet extends HttpServlet {
         System.out.println("POST SQL CALL");  
 
         SqlDataSource dataSource = SqlDataSource.getInstance();
+            Dao<String[]> sqlDBgetNames = new SqlGetTableNames(dataSource);
 
-        String tableName = "thisIsaTest";
-        String testCreate = "CREATE TABLE " + tableName +
-                            "(id SERIAL PRIMARY KEY, " +
-                            "names VARCHAR, " +
-                            "col1names VARCHAR, " +
-                            "col2names VARCHAR " +
-                            ")";
+        // Read all from database
+                List<String[]> outData = new ArrayList<>();
+                outData = sqlDBgetNames.readAll(null);
+                if (outData != null){
+                    for (int i = 0; i< outData.size();i++) {
+                        resp.getWriter().format("%20s", outData.get(i)[0] + " ");
+                        resp.getWriter().format("%20s", outData.get(i)[1] + " ");
+                        resp.getWriter().format("%20s", outData.get(i)[2] + "\n");
+                    }
+                }
+        ArrayList<String[]> uselessTestDummy = new ArrayList<>();
 
-        try(Connection connection = dataSource.getConnection();
-            Statement statement = connection.createStatement();) {
-                statement.executeUpdate(testCreate);
-            }
-        catch (SQLException e) {
-            System.err.println(e.getMessage());
-            }
+        StorageVar test1 = new StorageVar("table1.csv", "header1" , "op1", uselessTestDummy);
+        StorageVar test2 = new StorageVar("table2.csv", "header1dash2", "header2dash2", "op2", uselessTestDummy);
+        
+
+        SqlTableCreate newTables = new SqlTableCreate();
+            newTables.makeTable(test1,dataSource);
+            sqlDBgetNames.insertAll(test1);
+            newTables.makeTable(test2, dataSource);
+            sqlDBgetNames.insertAll(test2);
+
     }
-
 }

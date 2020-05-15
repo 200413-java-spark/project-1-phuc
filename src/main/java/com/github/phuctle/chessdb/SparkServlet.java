@@ -2,6 +2,7 @@ package com.github.phuctle.chessdb;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -20,7 +21,7 @@ import scala.Tuple2;
 
 public class SparkServlet extends HttpServlet {
     /**
-     *Servlet used to interact with Spark
+     * Servlet used to interact with Spark
      */
     private static final long serialVersionUID = 1L;
 
@@ -31,48 +32,48 @@ public class SparkServlet extends HttpServlet {
         if (fileName != null) {
             resp.getWriter().println("These are the names of the columns: \n");
 
-    
             JavaRDD<String> chessDataCSV = new LoadCSV().getCSVFileContext(fileName);
             JavaRDD<String[]> chessDataColumnsPre = chessDataCSV.map((x) -> x.split(","));
             String[] header = chessDataColumnsPre.take(1).get(0);
-    
-            for (int i =0; i < header.length; i++){
-                resp.getWriter().println(i + ". " +header[i]);;
+
+            for (int i = 0; i < header.length; i++) {
+                resp.getWriter().println(i + ". " + header[i]);
+                ;
             }
-    
-            resp.getWriter().println("\nSelect up to two columns using ?col1=[]&col2=[]&op=[].\n"+
-                "Single column operations available are: ave, count\n"+
-                "If two columns are selected, the first column is the primary key and\n"+
-                "and the operation is performed on the second column.");
-        }
-        else{
+
+            resp.getWriter()
+                    .println("\nSelect up to two columns using ?col1=[]&col2=[]&op=[].\n"
+                            + "Single column operations available are: ave, count\n"
+                            + "If two columns are selected, the first column is the primary key and\n"
+                            + "and the operation is performed on the second column.");
+        } else {
             resp.getWriter().println("This needs a file parameter.");
         }
     }
-    
+
     @Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         System.out.println("POST METHOD CALL");
-        //Dataset<Row> chessDataCSV = new LoadCSV().getCSVFileSession();
-        //chessDataCSV.show();
+        // Dataset<Row> chessDataCSV = new LoadCSV().getCSVFileSession();
+        // chessDataCSV.show();
         String col1s = req.getParameter("col1");
         String col2s = req.getParameter("col2");
-        String col3s = req.getParameter("col3");
+        // String col3s = req.getParameter("col3");
         String op = req.getParameter("op");
         String fileName = req.getParameter("file");
         String save = req.getParameter("save");
 
-        //checks to make sure that the col values are integers
+        // checks to make sure that the col values are integers
         try {
-            if (col1s != null){
+            if (col1s != null) {
                 int col1 = Integer.parseInt(col1s);
-            }   
-            if (col2s != null){
+            }
+            if (col2s != null) {
                 int col2 = Integer.parseInt(col2s);
-            }  
-            if (col3s != null){
-                int col3 = Integer.parseInt(col3s);
-            }    
+            }
+            // if (col3s != null){
+            // int col3 = Integer.parseInt(col3s);
+            // }
         } catch (NumberFormatException e) {
             System.err.println("Column values need to be integers.");
             System.exit(0);
@@ -80,98 +81,127 @@ public class SparkServlet extends HttpServlet {
 
         String tableCreate = "new";
 
-        if (col1s != null && op != null){
-            //load in file as an RDD
+        if (col1s != null && op != null) {
+            // load in file as an RDD
             JavaRDD<String> chessDataCSV = new LoadCSV().getCSVFileContext(fileName);
-            //splits the lines into a string array
+            // splits the lines into a string array
             JavaRDD<String[]> chessDataColumnsPre = chessDataCSV.map((x) -> x.split(","));
-            //identifies the first row as the header
+            // identifies the first row as the header
             String[] header = chessDataColumnsPre.take(1).get(0);
-            if (Integer.parseInt(col1s) < 0 || Integer.parseInt(col1s) > header.length){
+            if (Integer.parseInt(col1s) < 0 || Integer.parseInt(col1s) > header.length) {
                 System.err.println("The value for column 1 is out of bounds.");
                 System.exit(0);
             }
             String headerTag = header[0];
-            //removes the header from the RDD
-            JavaRDD<String[]> chessDataCol = chessDataColumnsPre
-                .filter((x) -> (!(x[0].equals(headerTag))));
+            // removes the header from the RDD
+            JavaRDD<String[]> chessDataCol = chessDataColumnsPre.filter((x) -> (!(x[0].equals(headerTag))));
 
-            //pulls out everything from selected column into new RDD for column 1
-            JavaRDD<String> selectedCol1 = chessDataCol
-                .cache()
-                .map(x -> x[Integer.parseInt(col1s)]);
-            //counts the number 
-            JavaPairRDD<String, Integer> selectedColCount = selectedCol1 
-                .mapToPair(x -> new Tuple2(x,1))
-                .reduceByKey((a,b) -> ((int)a+(int)b))
-                .cache();
-        
-            if (col2s != null){
+            // pulls out everything from selected column into new RDD for column 1
+            JavaRDD<String> selectedCol1 = chessDataCol.cache().map(x -> x[Integer.parseInt(col1s)]);
+            // counts the number
+            JavaPairRDD<String, Integer> selectedColCount = selectedCol1.mapToPair(x -> new Tuple2(x, 1))
+                    .reduceByKey((a, b) -> ((int) a + (int) b)).cache();
+
+            if (col2s != null) {
+
                 switch (op) {
                     case "ave":
-                        //isolates the two selected columns
-                        JavaPairRDD<String,Integer> selectedPairCol = chessDataCol
-                            .mapToPair(x -> new Tuple2(x[Integer.parseInt(col1s)],Integer.parseInt(x[Integer.parseInt(col2s)])));
-                        JavaPairRDD<String,Integer> totalValuePair = selectedPairCol
-                            .reduceByKey((a,b) -> ((int)a+(int)b));
+                        // isolates the two selected columns
+                        JavaPairRDD<String, Integer> selectedPairCol = chessDataCol
+                                .mapToPair(x -> new Tuple2(x[Integer.parseInt(col1s)],
+                                        Integer.parseInt(x[Integer.parseInt(col2s)])));
+                        JavaPairRDD<String, Integer> totalValuePair = selectedPairCol
+                                .reduceByKey((a, b) -> ((int) a + (int) b)); //obtains the total amount of col 2 by key
 
                         JavaPairRDD<String, Tuple2<Integer, Integer>> joinedRDD = totalValuePair.join(selectedColCount);
-                        JavaPairRDD<String, Integer> joinedAveRDD = joinedRDD.mapToPair((x) -> new Tuple2(x._1,(x._2._1 / x._2._2)));
+                        JavaPairRDD<String, Integer> joinedAveRDD = joinedRDD
+                                .mapToPair((x) -> new Tuple2(x._1, (x._2._1 / x._2._2)));
 
-                        //resp.getWriter().println(joinedAveRDD.collect());
+                        // resp.getWriter().println(joinedAveRDD.collect());
                         break;
-                
+                    case "topave":
+                        // isolates the two selected columns
+                        JavaPairRDD<String, Integer> selectedPairTop = chessDataCol
+                                .mapToPair(x -> new Tuple2(x[Integer.parseInt(col1s)],
+                                        Integer.parseInt(x[Integer.parseInt(col2s)])));
+                        JavaPairRDD<String, Integer> totalValuePairTop = selectedPairTop
+                                .reduceByKey((a, b) -> ((int) a + (int) b)); //obtains the total amount of col 2 by key  
+                                
+                        JavaPairRDD<String, Tuple2<Integer, Integer>> joinedRDDTop = totalValuePairTop.join(selectedColCount);
+                        List<Tuple2<String, Integer>> joinedAveListTop = joinedRDDTop
+                                .mapToPair(x -> new Tuple2(x._1, (x._2._1 / x._2._2)))
+                                .mapToPair(x -> ((Tuple2) x).swap())
+                                .sortByKey(false)
+                                .mapToPair(x -> ((Tuple2) x).swap())
+                                .take(20);
+
+                                for (int i =0; i< joinedAveListTop.size(); i ++){
+                                    resp.getWriter().format("%50s",joinedAveListTop.get(i)._1 + " ");
+                                    resp.getWriter().format("%30s",Integer.toString(joinedAveListTop.get(i)._2) + "\n");
+                                }
+                        break;
                     default:
                         break;
                 }
-            }
-            else{
+            } else {
                 switch (op) {
                     case "count":
                         int numOfDiffKeys = selectedColCount.collect().size();
 
-                        //saves to database
-                        if (save != null && save.equals("yes")){
-                            //adds a header to the cache to be pushed
+                        // saves to database
+                        if (save != null && save.equals("yes")) {
+                            // adds a header to the cache to be pushed
                             ArrayList<String[]> pushArray = new ArrayList<>();
-                            String[] headerTags = {header[Integer.parseInt(col1s)],"count"};
-                            pushArray.add(headerTags);
+                            // String[] headerTags = {header[Integer.parseInt(col1s)],"count"};
+                            // pushArray.add(headerTags);
 
                             resp.getWriter().println("Saving to database.");
-                            //for loop iterates through each set of counted items
-                            for (int i = 0; i < numOfDiffKeys; i++){
+                            // for loop iterates through each set of counted items
+                            for (int i = 0; i < numOfDiffKeys; i++) {
                                 String keyName = selectedColCount.collect().get(i)._1;
                                 String countVal = Integer.toString(selectedColCount.collect().get(i)._2);
-                                //saves the name inside column with its count as a string array
-                                String[] keyValPair = {keyName,countVal};
+                                // saves the name inside column with its count as a string array
+                                String[] keyValPair = { keyName, countVal };
 
-                                //adds to the arraylist
+                                // adds to the arraylist
                                 pushArray.add(keyValPair);
-                                //once done iterating through the list, it pushes to sql repository
-                                if (i == (numOfDiffKeys-1)){
-                                    //resp.getWriter().println("Attempting to push to database.");
+                                // once done iterating through the list, it pushes to sql repository
+                                if (i == (numOfDiffKeys - 1)) {
+                                    // resp.getWriter().println("Attempting to push to database.");
                                     SqlDataSource dataSource = SqlDataSource.getInstance();
-				                    Dao<String[]> fileInRepo = new SqlRepo(dataSource);
-                                    fileInRepo.insertAll(pushArray);
+                                    Dao<String[]> fileInRepo = new SqlRepo(dataSource);
+                                    // fileInRepo.insertAll(pushArray);
                                 }
                             }
-                        }
-                        else{
+                        } else {
                             resp.getWriter().println(selectedColCount.collect());
                         }
                         break;
 
                     case "ave":
-                        JavaRDD<Integer> colInt = selectedCol1
-                            .map(x -> Integer.parseInt(x));
+                        JavaRDD<Integer> colInt = selectedCol1.map(x -> Integer.parseInt(x));
                         int average = (int) (colInt.reduce((a, b) -> ((int) a + (int) b)) / colInt.count());
 
-                        //resp.getWriter().println("The average of column "+col1s+" is "+average);
+                        // resp.getWriter().println("The average of column "+col1s+" is "+average);
 
-                        if(save != null && save.equals("yes")){
-                            
+                        if (save != null && save.equals("yes")) {
+
                         }
                         break;
+
+                    case "top":
+                        List<Tuple2<String, Integer>> sortedCol = selectedColCount
+                                .mapToPair(x -> x.swap()) //swaps key and value
+                                .sortByKey(false)         //sorts by key in descending order so highest value
+                                .mapToPair(x -> x.swap()) //is on top
+                                .take(20);                //takes the top 20 values to improve performance
+
+                        /*for (int i =0; i< sortedCol.size(); i ++){
+                            resp.getWriter().format("%50s",sortedCol.get(i)._1 + " ");
+                            resp.getWriter().format("%30s",Integer.toString(sortedCol.get(i)._2) + "\n");
+                        }*/
+                        
+
                     default:
                         break;
                 }
