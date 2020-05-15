@@ -1,8 +1,8 @@
 # Project 1 - Phuc Le
-## Servlet Database ETL Processor
+## Servlet Database ETL Processor: Chess Database Processor
 
 ## Command to run on vs code
-> java -Xmx1g -jar target/chessdb-0.0.1-SNAPSHOT.jar
+> java -Xmx1g -jar target/chessdb-1.0.0.jar
 
 ## Commands to start up Docker container and Postgres SQL server
 > sudo docker run --name chessdb -d --rm -p 5432:5432 chessdbtest

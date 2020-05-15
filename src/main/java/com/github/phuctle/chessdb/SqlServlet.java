@@ -6,8 +6,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -18,7 +16,6 @@ import com.github.phuctle.chessdb.io.Dao;
 import com.github.phuctle.chessdb.io.SqlDataSource;
 import com.github.phuctle.chessdb.io.SqlGetTableNames;
 import com.github.phuctle.chessdb.io.SqlRepo;
-import com.github.phuctle.chessdb.operations.SqlTableCreate;
 import com.github.phuctle.chessdb.operations.StorageVar;
 
 public class SqlServlet extends HttpServlet {
@@ -44,11 +41,7 @@ public class SqlServlet extends HttpServlet {
                 for(int i =0; i < outDataNames.size(); i++){
                     if (outDataNames.get(i)[0].equals(tableSelect)){
 
-                        resp.getWriter().println(outDataNames.get(i)[0]);
-
                         StorageVar tableSelectVar = new StorageVar(outDataNames.get(i)[0],outDataNames.get(i)[1],outDataNames.get(i)[2]);
-
-                        resp.getWriter().println(tableSelectVar.getTableName());
 
                         outDataTable = sqlDBget.readAll(tableSelectVar);
                         // Read all from database
@@ -64,19 +57,19 @@ public class SqlServlet extends HttpServlet {
             resp.getWriter().println("No table name specified.");
             //Reads all names database
             outDataNames = sqlDBgetNames.readAll(null);
+            try{
                 if (outDataNames.get(0)[0] != null){
                     resp.getWriter().println("This is a list of table names.\n");
                     for (int i = 0; i< outDataNames.size();i++) {
                         resp.getWriter().println(outDataNames.get(i)[0]);
-                        //resp.getWriter().format("%20s", outData.get(i)[1] + " ");
-                        //resp.getWriter().format("%20s", outData.get(i)[2] + "\n");
                     }
                 }
+            }
+            catch(IndexOutOfBoundsException e){
+                System.err.println(e);
+            }
+                
         }
-    }
-    
-    private StorageVar StorageVar(String tableSelect, String string, String string2) {
-        return null;
     }
 
     @Override

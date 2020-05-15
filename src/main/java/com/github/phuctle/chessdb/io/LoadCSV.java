@@ -1,13 +1,9 @@
 package com.github.phuctle.chessdb.io;
 
 import com.github.phuctle.chessdb.startup.CreateContext;
-import com.github.phuctle.chessdb.startup.CreateSparkSession;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
 
 public class LoadCSV {
     //CreateSparkSession session = CreateSparkSession.getInstance();

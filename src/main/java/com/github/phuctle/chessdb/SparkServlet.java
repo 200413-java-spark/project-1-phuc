@@ -48,7 +48,7 @@ public class SparkServlet extends HttpServlet {
 
             resp.getWriter()
                     .println("\nSelect up to two columns using ?col1=[]&col2=[]&op=[].\n"
-                            + "Single column operations available are: ave, count\n"
+                            + "Single column operations available are: ave, count, topave, top\n"
                             + "If two columns are selected, the first column is the primary key and\n"
                             + "and the operation is performed on the second column.");
         } else {
@@ -59,16 +59,15 @@ public class SparkServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         System.out.println("POST METHOD CALL");
-        // Dataset<Row> chessDataCSV = new LoadCSV().getCSVFileSession();
-        // chessDataCSV.show();
+
         String col1s = req.getParameter("col1");
         String col2s = req.getParameter("col2");
-        // String col3s = req.getParameter("col3");
         String op = req.getParameter("op");
         String fileName = req.getParameter("file");
         String save = req.getParameter("save");
 
         Set<String> tabNames = new HashSet<>();
+        int flag = 1;
 
         // checks to make sure that the col values are integers
         try {
@@ -78,16 +77,12 @@ public class SparkServlet extends HttpServlet {
             if (col2s != null) {
                 int col2 = Integer.parseInt(col2s);
             }
-            // if (col3s != null){
-            // int col3 = Integer.parseInt(col3s);
-            // }
         } catch (NumberFormatException e) {
             System.err.println("Column values need to be integers.");
-            System.exit(0);
+            flag = 0;
         }
         
-
-        if (col1s != null && op != null) {
+        if (col1s != null && op != null && flag == 1) {
             // load in file as an RDD
             JavaRDD<String> chessDataCSV = new LoadCSV().getCSVFileContext(fileName);
             // splits the lines into a string array
@@ -110,7 +105,11 @@ public class SparkServlet extends HttpServlet {
                     .reduceByKey((a, b) -> ((int) a + (int) b)).cache();
 
             if (col2s != null) {
-
+                if (Integer.parseInt(col2s) < 0 || Integer.parseInt(col2s) > header.length) {
+                    System.err.println("The value for column 2 is out of bounds.");   
+                }
+    
+                else{
                 switch (op) {
                     case "ave":
                         // isolates the two selected columns
@@ -204,7 +203,7 @@ public class SparkServlet extends HttpServlet {
                         break;
                     default:
                         break;
-                } } 
+                } } }
                 else {
                 switch (op) {
                     case "count":
